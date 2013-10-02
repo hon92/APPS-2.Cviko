@@ -1,0 +1,4 @@
+#define set( VYSTUP ) PORTB |= ( 1 << VYSTUP )//ZAPNE VYSTUPNY PIN
+#define clr( VYSTUP ) PORTB &= ~( 1 << VYSTUP )//VYPNE VYSTUPNY PIN
+#define neg( VYSTUP ) PORTB ^= ( 1 << VYSTUP )//ZMENI STAV VYSTUPNEHO PINU
+
