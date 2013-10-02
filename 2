@@ -1,0 +1,491 @@
+#include "../avrkit/avrkit.h"
+#include <stdio.h>
+#include <avr/io.h>
+
+
+#define neg(VYSTUP) PORTB^= (1 << VYSTUP)
+
+
+
+void port_init()
+{
+DDRB = 0xFF; //Nastavim PORTB na vystup
+DDRC = 0xFF; //Nastavim PORTC na vystup
+
+PORTB = 0x00; //Zapnu na vsech segmentech log.1 - pouze pro simulator, v nem nejsou v zapojeni tranzistory
+}
+
+unsigned char BCD(unsigned char vstup){
+	if(vstup == 0) return 0x3F; //cislo 0
+	if(vstup == 1) return 0x06; //cislo 1
+	if(vstup == 2) return 0x5B; //cislo 2
+	if(vstup == 3) return 0x4F; //cislo 3
+	if(vstup == 4) return 0x66; //cislo 4
+	if(vstup == 5) return 0x6D; //cislo 5
+	if(vstup == 6) return 0x7D; //cislo 6
+	if(vstup == 7) return 0x07; //cislo 7
+	if(vstup == 8) return 0x7F; //cislo 8
+	if(vstup == 9) return 0x6F; //cislo 9
+	
+}
+
+ int main()
+{
+	
+port_init();
+
+char login[4]={0,0,0,9}; //Deklarace cisel loginu
+	
+
+
+//A + B + C - 1 Bod
+/*while(1)
+{
+for(int i=0;i<8;i++)
+{
+	
+	PORTC=BCD(i); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+	neg(7-i); //Rozsvitim segment
+	delay_ms(1/4);
+	neg(7-i); //Zhasnu segment
+	//Zhasnu segment
+}*/
+
+//A - 3 Body
+/*while(1)
+{
+for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+{
+	 PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+	neg(7-i); //Rozsvitim segment
+	delay_ms(1);
+	neg(7-i);
+}*/
+
+//A - 5 Bodu
+/*while(1)
+{
+for(int j=0;j<5;j++) //3x posunu bity doprava (protoze 1. zobrazeni jsem udelal uz ve vypisu)
+{	
+	for(int time=0;time<1000;time++)
+    {
+		for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+		{
+		 	PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+			neg(7-i-j);
+			delay_ms(1/4);
+			neg(7-i-j);
+		}			
+	}
+}*/
+
+
+
+//A - 7 Bodu
+/*while(1)
+{
+for(int j=0;j<4;j++) //4x posunu bity doprava (protoze 5. zobrazeni se udela ve zpatecnim cyklu)
+{	
+	for(int time=0;time<1000;time++)
+    {
+		for(int i=0;i<4;i++) //Cyklus na vpis cisla loginu do segmentu
+		{
+		 	PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+			neg(7-i-j);
+			delay_ms(1/4);
+			neg(7-i-j);
+		}			
+	}
+}	
+
+for(int j=4;j>=1;j--) //3x posunu bity doprava (protoze 1. zobrazeni jsem udelal uz ve vypisu)
+{	
+	for(int time=0;time<1000;time++)
+    {
+		for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+		{
+		 	PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+			neg(7-i-j);
+			delay_ms(1/4);
+			neg(7-i-j);
+		}			
+	}
+}*/
+
+
+//B + C - 3 body
+/*int number = 32;
+int first  = number / 10; //Ziskavam jednotky
+int second = number % 10; //Ziskavam desitky
+while(1)
+{
+PORTC=BCD(first); //Zapis jednotek
+neg(7);
+delay_01ms(1);
+neg(7);
+
+PORTC=BCD(second); //Zapis desitek
+neg(6);
+delay_01ms(1);
+neg(6)*/
+
+//B - 5 bodu
+/*while(1)
+{
+for(int i=0;i<100;i++)
+	{
+	if(i<10) // Do 10
+		{	
+		for(int time=0;time<1000;time++)
+			{
+			PORTC=BCD(i);
+			neg(7);
+			delay_ms(2/4);
+			neg(7);		
+			delay_ms(2/4);			
+			}
+		}		
+	else //10-99
+		{
+		int first  = i/10;
+		int second = i%10;
+		for(int time=0;time<1000;time++)
+			{
+			PORTC=BCD(first);
+			neg(7);
+			delay_01ms(1/2);
+			neg(7);
+			PORTC=BCD(second);
+			neg(6);
+			delay_01ms(1/2);
+			neg(6);
+			}				
+		}
+	}*/
+		
+//B - 7 Bodu
+/*int first_seconds, seconds_seconds, first_minutes, second_minutes, first_hours, second_hours;	
+
+while(1)	
+{
+
+for(int hours=0;hours<24;hours++) //Cyklus hodin
+{
+	for(int minutes=0;minutes<60;minutes++)	//Cyklus minut
+	{
+		for(int seconds=0;seconds<60;seconds++)	//Cyklus sekund
+		{	
+			for(int time=0;time<1000;time++)
+			{
+			//Hodiny
+			int first_hours = hours/10; 
+			int second_hours = hours%10;
+			PORTC=BCD(first_hours);
+			neg(6);
+			delay_ms(1/10);
+			neg(6);
+
+			PORTC=BCD(second_hours) | 0x80;
+			neg(5);
+			delay_ms(1/10);
+			neg(5);
+	
+			//Minuty
+			int first_minutes = minutes/10;
+			int second_minutes = minutes%10;
+			PORTC=BCD(first_minutes);
+			neg(4);
+			delay_ms(1/10);
+			neg(4);
+
+			PORTC=BCD(second_minutes) | 0x80;
+			neg(3);
+			delay_ms(1/10);
+			neg(3);
+
+			//Vteriny
+			int first_seconds = seconds/10;
+			int second_seconds = seconds%10;
+			PORTC=BCD(first_seconds);
+			neg(2);
+			delay_ms(1/10);
+			neg(2);
+
+			PORTC=BCD(second_seconds);
+			neg(1);
+			delay_ms(1/10);
+			neg(1);
+			time++;
+			time++;
+			}
+		}			
+	}			
+}*/
+
+//B - 7 Bodu
+/*int first_seconds, second_seconds, first_minutes, second_minutes, first_hours, second_hours;
+
+int hours = 23;
+int minutes = 59;
+int seconds = 58;
+while(1)
+{
+	while (hours<=23)
+	{	
+		while(minutes<=59)
+		{	
+			while(seconds<=59)
+			{		
+				for(int time=0;time<1000;time++)
+				{
+				//Hodiny
+				int first_hours = hours/10;
+				int second_hours = hours%10;
+				PORTC=BCD(first_hours);
+				neg(6);
+				delay_ms(1/1000);
+				neg(6);
+
+				PORTC=BCD(second_hours) | 0x80;
+				neg(5);
+				delay_ms(1/1000);
+				neg(5);	
+			
+				//Minuty
+				int first_minutes = minutes/10;
+				int second_minutes = minutes%10;
+				PORTC=BCD(first_minutes);
+				neg(4);
+				delay_ms(1/1000);
+				neg(4);
+
+				PORTC=BCD(second_minutes) | 0x80;
+				neg(3);
+				delay_ms(1/1000);
+				neg(3);
+
+				//Vteriny
+				int first_seconds = seconds/10;
+				int	second_seconds = seconds%10;
+				PORTC=BCD(first_seconds);
+				neg(2);
+				delay_ms(1/1000);
+				neg(2);
+
+				PORTC=BCD(second_seconds);
+				neg(1);
+				delay_ms(1/1000);
+				neg(1);
+				}
+			seconds++;
+			}
+		seconds=0;
+		minutes++;
+		}
+	minutes=0;
+	hours++;
+	}
+hours=0;*/
+	
+//C - 5 bodu
+/*while(1)
+{
+for(int i=99;i>=0;i--)
+	{
+	if(i<10) // Do 10
+		{	
+		for(int time=0;time<1000;time++)
+			{
+			PORTC=BCD(i);
+			neg(7);
+			delay_ms(2/4);
+			neg(7);		
+			delay_ms(2/4);			
+			}
+		}		
+	else //10-99
+		{
+		int first  = i/10;
+		int second = i%10;
+		for(int time=0;time<1000;time++)
+			{
+			PORTC=BCD(first);
+			neg(7);
+			delay_01ms(1/2);
+			neg(7);
+			PORTC=BCD(second);
+			neg(6);
+			delay_01ms(1/2);
+			neg(6);
+			}				
+		}
+	}*/
+		
+//C - 7 Bodu (Var. A)
+/*int first_seconds, second_seconds, first_minutes, second_minutes; 
+
+int minutes = 2;
+int seconds = 5;
+
+while(minutes>=0)
+{	
+	while(seconds>=0)
+	{		
+		for(int time=0;time<1000;time++)
+		{
+		//Minuty
+		int first_minutes = minutes/10;
+		int second_minutes = minutes%10;
+		PORTC=BCD(first_minutes);
+		neg(5);
+		delay_ms(1/1000);
+		neg(5);
+
+		PORTC=BCD(second_minutes) | 0x80;
+		neg(4);
+		delay_ms(1/1000);
+		neg(4);
+
+		//Vteriny
+		int first_seconds = seconds/10;
+		int second_seconds = seconds%10;
+		PORTC=BCD(first_seconds);
+		neg(3);
+		delay_ms(1/1000);
+		neg(3);
+
+		PORTC=BCD(second_seconds);
+		neg(2);
+		delay_ms(1/1000);
+		neg(2);
+		}
+	seconds--;
+	}
+if (minutes<=0)
+	{
+		while(1)
+		{	
+		PORTC=BCD(first_minutes);
+		neg(5);
+		delay_ms(1/1000);
+		neg(5);
+
+		PORTC=BCD(second_minutes) | 0x80;
+		neg(4);
+		delay_ms(1/1000);
+		neg(4);	
+			
+		PORTC=BCD(first_seconds);
+		neg(3);
+		delay_ms(1/1000);
+		neg(3);
+
+		PORTC=BCD(second_seconds);
+		neg(2);
+		delay_ms(1/1000);
+		neg(2);
+		}
+	}			
+seconds=59;
+minutes--;*/
+
+
+
+//C - 7 Bodu (Var. B)
+/*int first_seconds, second_seconds, first_minutes, second_minutes; 
+int minutes=1;
+for(int seconds=30;seconds>=0;seconds--) //Cyklus sekund
+{ 
+	for(int time=0;time<1000;time++)
+	{
+	//Minuty
+	int first_minutes = minutes/10;
+	int second_minutes = minutes%10;
+	PORTC=BCD(first_minutes);
+	neg(5);
+	delay_ms(1/1000);
+	neg(5);
+
+	PORTC=BCD(second_minutes) | 0x80;
+	neg(4);
+	delay_ms(1/1000);
+	neg(4);
+
+	//Vteriny
+	int first_seconds = seconds/10;
+	int second_seconds = seconds%10;
+	PORTC=BCD(first_seconds);
+	neg(3);
+	delay_ms(1/1000);
+	neg(3);
+
+	PORTC=BCD(second_seconds);
+	neg(2);
+	delay_ms(1/1000);
+	neg(2);
+	}
+}
+
+minutes--;
+for(int seconds=59;seconds>=0;seconds--) //Cyklus sekund
+{ 
+	for(int time=0;time<1000;time++)
+	{
+	//Minuty
+	int first_minutes = minutes/10;
+	int second_minutes = minutes%10;
+	PORTC=BCD(first_minutes);
+	neg(5);
+	delay_ms(1/10);
+	neg(5);
+
+	PORTC=BCD(second_minutes) | 0x80;
+	neg(4);
+	delay_ms(1/10);
+	neg(4);
+
+	//Vteriny
+	int first_seconds = seconds/10;
+	int second_seconds = seconds%10;
+	PORTC=BCD(first_seconds);
+	neg(3);
+	delay_ms(1/10);
+	neg(3);
+
+	PORTC=BCD(second_seconds);
+	neg(2);
+	delay_ms(1/10);
+	neg(2);
+	}
+} 
+
+while(1) 
+{
+//Minuty
+PORTC=BCD(first_minutes);
+neg(5);
+delay_ms(1/10);
+neg(5);
+
+PORTC=BCD(second_minutes) | 0x80;
+neg(4);
+delay_ms(1/10);
+neg(4);
+
+//Vteriny
+PORTC=BCD(first_seconds);
+neg(3);
+delay_ms(1/10);
+neg(3);
+
+PORTC=BCD(second_seconds);
+neg(2);
+delay_ms(1/10);
+neg(2);*/
+}
+//while ( ( PIND & 0xF0 ) != 0xF0 );
+}
+
+
+
+
