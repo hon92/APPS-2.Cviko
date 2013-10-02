@@ -1,0 +1,537 @@
+// Cviceni c. 2 - Multiplexni rizeni vicemistneho displeje
+#include "../avrkit/avrkit.h"
+#include <stdio.h>
+// umoznuje pouzivat registry jako promenne
+#include <avr/io.h>
+
+// napiste funkci BCD za 1 bod
+unsigned char BCD(unsigned char vstup);
+
+// funkce vrátí takovou hodnotu, která bude reprezentovat zobrazení zadaného čísla na segmentovém displayi
+
+unsigned char BCD(unsigned char vstup)
+{
+	if (vstup == 0)
+		return 0x3F;
+	if (vstup == 1)
+		return 0x06;
+	if (vstup == 2)
+		return 0x5B;
+	if (vstup == 3)
+		return 0x4F;
+	if (vstup == 4)
+		return 0x66;
+	if (vstup == 5)
+		return 0x6D;
+	if (vstup == 6)
+		return 0x7D;
+	if (vstup == 7)
+		return 0x07;
+	if (vstup == 8)
+		return 0x7F;
+	if (vstup == 9)
+		return 0x67;		
+}
+
+// 1bod - Vytvořte funkci která bude mít jako vstupní hodnotu datový typ unsigned char. 
+// Návratová hodnota této funkce bude také unsigned char. Tato funkce vrátí takovou hodnotu, která bude
+// reprezentovat zobrazení zadaného čísla na segmentovém displayi. Správnost funkce demonstrujte na programu. 
+// verze pro simulator
+/*
+int main()
+{
+	avrkit_init();
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	
+	// pouze pro simulator, v realu nenastavovat!
+	PORTB = 0xFF;
+	
+	char test[8] = { 8, 7, 6, 5, 4, 3, 2, 1 };
+	
+	while (1)
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			// vybirame jednotlive prvky pole
+			if (i == 7)
+				PORTC = BCD(test[i]) | 0x80;
+			else
+				PORTC = BCD(test[i]);
+			
+			PORTB ^= (1 << i);
+			delay_ms(1);
+			PORTB ^= (1 << i);
+		}
+	}
+}
+*/
+
+// 3body - Na displayi zobrazte číslo svého loginu, pomocí multiplexního zobrazení. 
+// verze pro simulator
+/*
+int main()
+{
+	// vsechny piny portu B a C nastavim pomoci registru jako vystupni 
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTB = 0xFF;
+	
+	char login[4] = { 8, 0, 0, 0 };
+	
+	while (1)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			// multiplexovani
+			// vybireme a priradime LEDky, v mem pripade postupne 0-0-0-8
+			if (i == 0)
+				PORTC = BCD(login[i]) | 0x80;
+			else
+				PORTC = BCD(login[i]);
+						
+			// aktivuji segment	
+			PORTB ^= (128 >> i);			
+			delay_ms(1);
+			// deaktivuji segment
+			PORTB ^= (128 >> i);
+		}
+	}
+}
+*/
+
+// 5bodů - Nechte číslo svého loginu přejít na displayi z levé strany na pravou. Posun vždy po 1s.
+// verze pro simulator 
+/*
+int main()
+{
+	avrkit_init();
+	
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	
+	PORTB = 0xFF;
+	
+	char login[4] = { 0, 0, 0, 8 };
+	
+	while (1)
+	{
+		int posun = 0;
+		
+		// posun textu :)
+		for (int i = 0; i < 5; i++)
+		{
+			// nastavuji intenzivni periodu blikani..
+			for (int delay = 0; delay < 2000; delay++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					PORTC = BCD(login[j]);
+					PORTB ^= (1 << j + posun);
+					delay_ms(1/2);
+					PORTB ^= (1 << j + posun);	
+					
+					// extra posun - nedodelane
+					//PORTC = BCD(login[j]);
+					//PORTB ^= (1 << j + posun) >> 3;
+					//delay_ms(1/2);
+					
+					// zobrazeni znaku		= 1/2 ms
+					// zobrazeni loginu		= 4 * 1/2 = 2 ms
+					// posun po 1 sekunde	= 1000 / 2 = 500 ms
+					
+					//PORTB ^= (1 << j + posun) >> 3;
+					
+				}
+			}
+			
+			posun++;
+		}
+	}
+}
+*/
+
+// 7bodu - Nechte číslo svého loginu přejít na display z levé strany na pravou a poté z pravé na levou. Posun vždy po 1s.
+// verze pro simulator
+/*
+int main()
+{
+	avrkit_init();
+	
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	
+	PORTB = 0xFF;
+	
+	char login[4] = { 0, 0, 0, 8 };
+	int test = 0;
+	int posun = 0;
+	int konec = 0;
+	
+	while (1)
+	{
+		// odecitam o jednicku a v else jeste jednou, aby se posun nezobrazoval se zpozdenim 2 s
+		if (posun == 5)
+			posun--;		
+		
+		// posun doleva
+		if (test == 0)
+		{
+			// posun textu :)
+			for (int i = 0; i < 5; i++)
+			{
+				// nastavuji intenzivni periodu blikani.. 1 s
+				for (int delay = 0; delay < 2000; delay++)
+				{
+					for (int j = 0; j < 4; j++)
+					{
+						PORTC = BCD(login[j]);
+						PORTB ^= (1 << j + posun);
+						delay_ms(1/2);
+						PORTB ^= (1 << j + posun);	
+						
+						if (posun == 4)
+							test = 1;
+					}
+				}
+			
+				posun++;
+			}
+		} // konec ifu		
+		else
+		{
+			// posun textu :)
+			for (int i = 0; i < 4; i++)
+			{
+				posun--;
+				
+				if (posun == 0)
+				{
+					test = 0;
+					continue;
+				}					
+					
+				// nastavuji intenzivni periodu blikani..
+				for (int delay = 0; delay < 2000; delay++)
+				{
+					for (int j = 0; j < 4; j++)
+					{
+						PORTC = BCD(login[j]);
+						PORTB ^= (1 << j + posun);
+						delay_ms(1/2);
+						PORTB ^= (1 << j + posun);	
+					}
+				}
+			}
+		} // konec else
+	}
+}
+*/
+
+// 3body - Na displayi zobrazte dvojmístné číslo. Tedy číslo mezi 0 a 99. 
+// verze pro simulator
+/*
+int main()
+{
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	// pro simulator
+	PORTB = 0xFF;
+	
+	while (1)
+	{
+		// pouziti casoveho multiplexu - stridani informaci, v mem pripade cisel 8 a 4
+		PORTC = BCD(8) | 0x80;
+		PORTB ^= (1 << 0);
+		delay_ms(1);
+		PORTB ^= (1 << 0);
+		
+		PORTC = BCD(4) | 0x80;
+		PORTB ^= (1 << 1);
+		delay_ms(1);
+		PORTB ^= (1 << 1);
+	}
+}
+*/
+
+// 5bodů - Vytvořte čítač, který bude na displayi inkrementovat hodnotu vždy po 1s od hodnoty 0 až po hodnotu 99. 
+// verze pro simulator - nastaveni PORTB na 0xFF
+/*
+int main()
+{
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTB = 0xFF;	
+	
+	while (1)
+	{
+		for (int i = 0; i < 100; i++)
+		{
+			if (i < 10)
+			{
+				for (int delay = 0; delay < 300; delay++)
+				{
+					PORTC = BCD(i);
+					PORTB ^= (1 << 0);
+					delay_ms(1);
+					PORTB ^= (1 << 0);
+					delay_ms(1);
+				}	
+			}
+			else
+			{		
+				int prvniCifra = i / 10;
+				int druhaCifra = i % 10;
+	
+				for (int delay = 0; delay < 300; delay++)
+				{
+					PORTC = BCD(prvniCifra);
+					PORTB ^= (1 << 0);
+					delay_ms(1);
+					PORTB ^= (1 << 0);
+					
+					PORTC = BCD(druhaCifra);
+					PORTB ^= (1 << 1);
+					delay_ms(1);
+					PORTB ^= (1 << 1);	
+				}						
+			}
+						
+		}
+
+	}		
+}
+*/
+
+// 5bodů - Vytvořte čítač, který bude na displayi dekrementovat hodnotu vždy po 1s od hodnoty 99 až po hodnotu 0. 
+// verze pro simulator - nastaveni PORTB na 0xFF
+/*
+int main()
+{
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTB = 0xFF;
+	
+	
+	while (1)
+	{
+		for (int i = 99; i >= 0; i--)
+		{
+			if (i < 10)
+			{
+				for (int delay = 0; delay < 5000; delay++)
+				{
+					PORTC = BCD(i);
+					PORTB ^= (1 << 0);
+					delay_ms(1/10);
+					PORTB ^= (1 << 0);
+					delay_ms(1/10);
+				}	
+			}
+			else
+			{		
+				int prvniCifra = i / 10;
+				int druhaCifra = i % 10;
+	
+				for (int delay = 0; delay < 500; delay++)
+				{
+					PORTC = BCD(prvniCifra);
+					PORTB ^= (1 << 0);
+					delay_ms(1);
+					PORTB ^= (1 << 0);
+					
+					PORTC = BCD(druhaCifra);
+					PORTB ^= (1 << 1);
+					delay_ms(1);
+					PORTB ^= (1 << 1);	
+				}						
+			}
+						
+		}
+
+	}		
+}
+*/
+
+// 7bodů - Vytvořte stopky, které budou zobrazovat sekundy a minuty a odpočítají 1:30min do 0:00 a pak se zastaví. 
+// verze pro simulator - nastaveni PORTB na 0xFF
+/*
+int main()
+{
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTB = 0xFF;
+	
+	int x = 31;	
+	int y = 60;
+	int postup = 0;
+	int min;
+	int test = 1;
+
+	while (1)
+	{		
+		while (test)
+		{		
+			for (min = 1; min >= 0; min--)
+			{
+				for (int sek = 0; sek < 91; sek++)
+				{
+					postup++;
+				
+					if (postup < 32)
+					{
+						x--;
+						min = 1;
+					}
+					else
+					{
+						y -= 1;
+						x = y;
+						min = 0;
+					
+					// jakmile dojdu k nule, tak se prepinam na druhy while a vypisuji jenom same nuly
+					// zde dochazi k zastaveni na nule
+						if (y == 0)
+						{							
+							test = 0;
+							continue;
+						}
+					}	
+									
+					for (int delay = 0; delay < 150; delay++)
+					{	
+						PORTC = BCD(min);
+						PORTB ^= (1 << 0);
+						delay_ms(1);
+						PORTB ^= (1 << 0);
+						
+						int prvniCifraSekundy = x / 10;
+						int druhaCifraSekundy = x % 10;
+				
+						PORTC = BCD(prvniCifraSekundy);
+						PORTB ^= (1 << 1);
+						delay_ms(1);
+						PORTB ^= (1 << 1);					
+				
+						PORTC = BCD(druhaCifraSekundy);
+						PORTB ^= (1 << 2);
+						delay_ms(1);
+						PORTB ^= (1 << 2);					
+				
+					}
+				}
+			}
+		}
+		while (test == 0)
+		{
+			for (int delay = 0; delay < 100; delay++)
+			{			
+				PORTC = BCD(0);
+				PORTB ^= (1 << 0);
+				delay_ms(1);
+				PORTB ^= (1 << 0);
+		
+				PORTB ^= (1 << 1);
+				delay_ms(1);
+				PORTB ^= (1 << 1);
+		
+				PORTB ^= (1 << 2);
+				delay_ms(1);
+				PORTB ^= (1 << 2);
+			}		
+		}		
+	}		
+}
+*/
+
+// 1 bod, 3 body, 5 bodu
+// pozor na prikaz delay_ms(x), kde x musi byt cele cislo
+// nelze pouzivat napr. x = 1/10 - programatorska chyba
+// staci zmenit casouvou periodu - delay 167
+// 7 bodu - zacne pocitat od 08:59:00 
+// verze pro simulator - nastaveni PORTB na 0xFF
+
+int main()
+{
+	// inicializace prostredi
+	avrkit_init();
+
+	printf( "AVR-KIT ready...\n\n" );
+	printf( "To stop LED blinking press any button D4-D7.\n" );
+
+	// nastaveni vsech pinu jako vystupni
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	PORTB = 0xFF;
+	
+	int prvniCifraHodiny, druhaCifraHodiny, prvniCifraMinuty, druhaCifraMinuty, prvniCifraSekundy, druhaCifraSekundy;
+	int test2 = 0;
+	int min;
+	
+	while (1)
+	{
+		// nastavim urcenou hodinu 8
+		for (int hod = 8; hod < 24; hod++)
+		{			
+			// zacinam pocitat od 59 minuty
+			if (test2 == 0)
+			{
+				test2 = 1;
+				min = 59;
+			}
+			else			
+				min = 0;
+			
+			for (min; min < 60; min++)
+			{	
+				for (int sek = 0; sek < 60; sek++)
+				{
+					// perioda 167
+					// 1000/6
+					for (int delay = 0; delay < 167; delay++)
+					{
+						prvniCifraHodiny = hod / 10;
+						druhaCifraHodiny = hod % 10;
+						
+						PORTC = BCD(prvniCifraHodiny);
+						PORTB ^= (1 << 0);
+						delay_ms(1);
+						PORTB ^= (1 << 0);
+						
+						PORTC = BCD(druhaCifraHodiny) | 0x80;
+						PORTB ^= (1 << 1);
+						delay_ms(1);
+						PORTB ^= (1 << 1);
+						
+						prvniCifraMinuty = min / 10;
+						druhaCifraMinuty = min % 10;
+						
+						PORTC = BCD(prvniCifraMinuty);
+						PORTB ^= (1 << 2);
+						delay_ms(1);
+						PORTB ^= (1 << 2);
+						
+						PORTC = BCD(druhaCifraMinuty) | 0x80;
+						PORTB ^= (1 << 3);
+						delay_ms(1);
+						PORTB ^= (1 << 3);
+						
+						prvniCifraSekundy = sek / 10;
+						druhaCifraSekundy = sek % 10;
+						
+						PORTC = BCD(prvniCifraSekundy);
+						PORTB ^= (1 << 4);
+						delay_ms(1);
+						PORTB ^= (1 << 4);
+						
+						PORTC = BCD(druhaCifraSekundy) | 0x80;
+						PORTB ^= (1 << 5);
+						delay_ms(1);
+						PORTB ^= (1 << 5);				
+						
+					}
+				}
+			}
+		}		
+	}
+}
