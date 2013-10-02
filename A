@@ -1,0 +1,108 @@
+#include "../avrkit/avrkit.h"
+#include <stdio.h>
+#include <avr/io.h>
+
+
+#define neg(VYSTUP) PORTB^= (1 << VYSTUP)
+
+
+
+void port_init() //Inicializace portu
+{
+DDRB = 0xFF; //Nastavim PORTB na vystup
+DDRC = 0xFF; //Nastavim PORTC na vystup
+
+PORTB = 0xFF; //Zapnu na vsech segmentech log.1 - [b][size=150][color=#FF0000]pouze pro simulator, v nem nejsou v zapojeni tranzistory, ve cviceni je treba PORTB nastavit na 0x00[/color][/size][/b]
+}
+
+unsigned char BCD(unsigned char vstup){ 
+   if(vstup == 0) return 0x3F; //cislo 0
+   if(vstup == 1) return 0x06; //cislo 1
+   if(vstup == 2) return 0x5B; //cislo 2
+   if(vstup == 3) return 0x4F; //cislo 3
+   if(vstup == 4) return 0x66; //cislo 4
+   if(vstup == 5) return 0x6D; //cislo 5
+   if(vstup == 6) return 0x7D; //cislo 6
+   if(vstup == 7) return 0x07; //cislo 7
+   if(vstup == 8) return 0x7F; //cislo 8
+   if(vstup == 9) return 0x6F; //cislo 9
+   
+}
+
+ int main()
+{
+port_init();
+
+char login[4]={0,0,0,9}; //Deklarace cisel loginu
+
+
+//A - B - 1 Bod
+while(1)
+{
+for(int i=0;i<10;i++)
+{
+   PORTC=BCD(i); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+   neg(i); //Rozsvitim segment
+   delay_ms(1/4);
+   neg(i); //Zhasnu segment
+}
+
+//A - 3 Body
+
+while(1)
+{
+for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+{
+    PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+   neg(i); //Rozsvitim segment
+   delay_ms(1);
+   neg(i); //Zhasnu segment
+}
+
+//A - 5 Bodu
+while(1)
+{
+for(int j=0;j<5;j++) //3x posunu bity doprava (protoze 1. zobrazeni jsem udelal uz ve vypisu)
+{   
+   for(int time=0;time<1000;time++)
+    {
+      for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+      {
+          PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+         neg(i+j);
+         delay_ms(1/4);
+         neg(i+j);
+      }         
+   }
+}
+
+//A - 7 Bodu
+while(1)
+{
+for(int j=0;j<4;j++) //4x posunu bity doprava (protoze 5. zobrazeni se udela ve zpatecnim cyklu)
+{   
+   for(int time=0;time<1000;time++)
+    {
+      for(int i=0;i<4;i++) //Cyklus na vpis cisla loginu do segmentu
+      {
+          PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+         neg(i+j);
+         delay_ms(1/4);
+         neg(i+j);
+      }         
+   }
+}   
+
+for(int j=4;j>=1;j--) //3x posunu bity doprava (protoze 1. zobrazeni jsem udelal uz ve vypisu)
+{   
+   for(int time=0;time<1000;time++)
+    {
+      for(int i=0;i<4;i++) //Vpisu cislo loginu do segmentu
+      {
+          PORTC=BCD(login[i]); // Kdybych chtel tecku tak za to dam jeste "| 0x80" 
+         neg(i+j);
+         delay_ms(1/4);
+         neg(i+j);
+      }         
+   }
+}
